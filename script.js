@@ -235,6 +235,7 @@ let currentPaper = null;
 let currentIndex = 0;
 let answers = [];
 let pendingStudent = { name:"", roll:"" };
+let lastResult = null;
 
 /* ===================== DOM HELPERS ===================== */
 const $ = (id) => document.getElementById(id);
@@ -300,4 +301,218 @@ $("startTestBtn").addEventListener("click", ()=>{
 
 function startTest(){
   currentIndex = 0;
-  answers = new Array(currentPaper
+  answers = new Array(currentPaper.questions.length).fill(null);
+  $("testPaperTitle").textContent = `${currentPaper.title} — ${currentPaper.subtitle}`;
+  showView("testView");
+  renderQuestion();
+}
+
+/* ===================== QUESTION RENDER ===================== */
+function renderQuestion(){
+  const total = currentPaper.questions.length;
+  const q = currentPaper.questions[currentIndex];
+
+  $("testProgress").textContent = `Q ${currentIndex+1} / ${total}`;
+  $("progressFill").style.width = `${((currentIndex+1)/total)*100}%`;
+  $("questionText").textContent = `${currentIndex+1}. ${q.q}`;
+
+  const optionsBox = $("optionsList");
+  optionsBox.innerHTML = "";
+  const letters = ["A","B","C","D"];
+  q.o.forEach((opt, idx)=>{
+    const item = document.createElement("div");
+    item.className = "option-item" + (answers[currentIndex]===idx ? " selected" : "");
+    item.innerHTML = `<span class="option-letter">${letters[idx]}</span><span>${opt}</span>`;
+    item.addEventListener("click", ()=>{
+      answers[currentIndex] = idx;
+      renderQuestion();
+    });
+    optionsBox.appendChild(item);
+  });
+
+  $("prevBtn").style.visibility = currentIndex===0 ? "hidden" : "visible";
+  if(currentIndex === total-1){
+    $("nextBtn").style.display = "none";
+    $("submitBtn").style.display = "block";
+  } else {
+    $("nextBtn").style.display = "block";
+    $("submitBtn").style.display = "none";
+  }
+}
+
+$("prevBtn").addEventListener("click", ()=>{
+  if(currentIndex>0){ currentIndex--; renderQuestion(); }
+});
+
+$("nextBtn").addEventListener("click", ()=>{
+  if(currentIndex < currentPaper.questions.length-1){ currentIndex++; renderQuestion(); }
+});
+
+$("submitBtn").addEventListener("click", ()=>{
+  if(confirm("Kya aap test submit karna chahte hain?")){
+    submitTest();
+  }
+});
+
+$("quitTestBtn").addEventListener("click", ()=>{
+  if(confirm("Test chhod dein? Aapki progress save nahi hogi.")){
+    showView("homeView");
+    renderHome();
+  }
+});
+
+/* ===================== SUBMIT & RESULT ===================== */
+function submitTest(){
+  const total = currentPaper.questions.length;
+  let correct = 0;
+  currentPaper.questions.forEach((q,idx)=>{
+    if(answers[idx] === q.a) correct++;
+  });
+  const wrong = total - correct;
+  const percent = Math.round((correct/total)*100);
+  const pass = percent >= 33;
+  const grade = getGrade(percent);
+  const dateStr = new Date().toLocaleDateString('en-GB');
+
+  lastResult = {
+    paperId: currentPaper.id,
+    paperTitle: `${currentPaper.title} — ${currentPaper.subtitle}`,
+    name: pendingStudent.name,
+    roll: pendingStudent.roll,
+    date: dateStr,
+    total, correct, wrong, percent, pass, grade,
+    answers: [...answers]
+  };
+
+  saveHistory(lastResult);
+  renderResult(lastResult);
+  showView("resultView");
+}
+
+function getGrade(percent){
+  if(percent>=90) return "A+";
+  if(percent>=80) return "A";
+  if(percent>=70) return "B";
+  if(percent>=60) return "C";
+  if(percent>=50) return "D";
+  if(percent>=33) return "E";
+  return "F";
+}
+
+function saveHistory(result){
+  const history = JSON.parse(localStorage.getItem("pectta_history") || "[]");
+  history.unshift({
+    paperId: result.paperId,
+    paperTitle: result.paperTitle,
+    name: result.name,
+    roll: result.roll,
+    date: result.date,
+    total: result.total,
+    correct: result.correct,
+    percent: result.percent,
+    pass: result.pass,
+    grade: result.grade
+  });
+  localStorage.setItem("pectta_history", JSON.stringify(history));
+}
+
+function renderResult(result){
+  $("rName").textContent = result.name || "-";
+  $("rRoll").textContent = result.roll || "-";
+  $("rPaper").textContent = result.paperTitle;
+  $("rDate").textContent = result.date;
+  $("rTotal").textContent = result.total;
+  $("rCorrect").textContent = result.correct;
+  $("rWrong").textContent = result.wrong;
+  $("rPercent").textContent = `${result.percent}%`;
+  $("rGrade").textContent = result.grade;
+  const statusEl = $("rStatus");
+  statusEl.textContent = result.pass ? "PASS" : "FAIL";
+  statusEl.className = result.pass ? "pass" : "fail";
+  $("reviewSection").innerHTML = "";
+  $("reviewSection").style.display = "none";
+}
+
+$("downloadBtn").addEventListener("click", ()=>{
+  window.print();
+});
+
+$("shareBtn").addEventListener("click", async ()=>{
+  const r = lastResult;
+  if(!r) return;
+  const text = `PECTTA 2026-27 Result\nName: ${r.name}\nPaper: ${r.paperTitle}\nScore: ${r.correct}/${r.total} (${r.percent}%)\nGrade: ${r.grade}\nResult: ${r.pass ? "PASS":"FAIL"}`;
+  if(navigator.share){
+    try{ await navigator.share({ title:"PECTTA Result", text }); }
+    catch(e){ /* user cancelled */ }
+  } else {
+    try{
+      await navigator.clipboard.writeText(text);
+      alert("Result copy ho gaya hai clipboard mein.");
+    }catch(e){
+      alert(text);
+    }
+  }
+});
+
+$("reviewBtn").addEventListener("click", ()=>{
+  const box = $("reviewSection");
+  if(box.style.display === "block"){
+    box.style.display = "none";
+    return;
+  }
+  box.innerHTML = "";
+  currentPaper.questions.forEach((q, idx)=>{
+    const userAns = answers[idx];
+    const isCorrect = userAns === q.a;
+    const item = document.createElement("div");
+    item.className = "review-item " + (isCorrect ? "correct" : "wrong");
+    item.innerHTML = `
+      <div class="review-q">${idx+1}. ${q.q}</div>
+      <div class="review-ans correct-ans">Correct: ${q.o[q.a]}</div>
+      ${!isCorrect ? `<div class="review-ans wrong-ans">Your Answer: ${userAns!==null ? q.o[userAns] : "Not Attempted"}</div>` : ""}
+    `;
+    box.appendChild(item);
+  });
+  box.style.display = "block";
+});
+
+$("homeBtn").addEventListener("click", ()=>{
+  showView("homeView");
+  renderHome();
+});
+
+/* ===================== HISTORY VIEW ===================== */
+$("historyBtn").addEventListener("click", ()=>{
+  renderHistory();
+  showView("historyView");
+});
+
+$("closeHistoryBtn").addEventListener("click", ()=>{
+  showView("homeView");
+  renderHome();
+});
+
+function renderHistory(){
+  const list = $("historyList");
+  list.innerHTML = "";
+  const history = JSON.parse(localStorage.getItem("pectta_history") || "[]");
+  if(history.length === 0){
+    list.innerHTML = `<p style="text-align:center;color:#6b7280;">Abhi tak koi test attempt nahi hua.</p>`;
+    return;
+  }
+  history.forEach(h=>{
+    const item = document.createElement("div");
+    item.className = "history-item";
+    item.innerHTML = `
+      <div>
+        <div><strong>${h.paperTitle}</strong></div>
+        <div>${h.name || "-"} • ${h.date}</div>
+      </div>
+      <div class="h-status ${h.pass ? 'pass':'fail'}">${h.percent}% (${h.pass?'Pass':'Fail'})</div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+/* ===================== INIT ===================== */
+renderHome();
