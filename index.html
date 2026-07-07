@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ur-PK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PECTTA Class 8 Maths MCQs</title>
+<meta name="theme-color" content="#0b1f3a">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-title">PECTTA 2026-27</span>
+      <span class="brand-sub">Class 8 Mathematics MCQ Practice</span>
+    </div>
+    <button id="historyBtn" class="icon-btn" title="Attempt History">📊</button>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- HOME VIEW -->
+  <section id="homeView" class="view active">
+    <div class="section-label">Chapter-wise Papers</div>
+    <div id="chapterPapers" class="paper-grid"></div>
+
+    <div class="section-label">Full Syllabus Papers</div>
+    <div id="fullPapers" class="paper-grid"></div>
+  </section>
+
+  <!-- STUDENT INFO MODAL -->
+  <div id="infoModal" class="modal-overlay">
+    <div class="modal-box">
+      <h3>Attempt Details</h3>
+      <label>Student Name</label>
+      <input type="text" id="studentName" placeholder="Apna naam likhein">
+      <label>Roll No / Class</label>
+      <input type="text" id="studentRoll" placeholder="Roll No (optional)">
+      <div class="modal-actions">
+        <button id="cancelInfo" class="btn btn-ghost">Cancel</button>
+        <button id="startTestBtn" class="btn btn-primary">Start Test</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST VIEW -->
+  <section id="testView" class="view">
+    <div class="test-topbar">
+      <span id="testPaperTitle">Paper</span>
+      <span id="testProgress">Q 1 / 15</span>
+    </div>
+    <div class="progress-bar-track"><div id="progressFill" class="progress-bar-fill"></div></div>
+
+    <div id="questionCard" class="question-card">
+      <div id="questionText" class="question-text"></div>
+      <div id="optionsList" class="options-list"></div>
+    </div>
+
+    <div class="test-nav">
+      <button id="prevBtn" class="btn btn-ghost">◀ Previous</button>
+      <button id="nextBtn" class="btn btn-primary">Next ▶</button>
+      <button id="submitBtn" class="btn btn-success" style="display:none;">Submit Test</button>
+    </div>
+
+    <button id="quitTestBtn" class="quit-link">Quit Test</button>
+  </section>
+
+  <!-- RESULT VIEW -->
+  <section id="resultView" class="view">
+    <div id="resultCard" class="result-card">
+      <div class="result-header">
+        <div class="result-title">PECTTA 2026-27 — Result Card</div>
+        <div class="result-sub">Class 8 Mathematics MCQ Test</div>
+      </div>
+
+      <table class="result-table">
+        <tr><td>Student Name</td><td id="rName">-</td></tr>
+        <tr><td>Roll No / Class</td><td id="rRoll">-</td></tr>
+        <tr><td>Paper</td><td id="rPaper">-</td></tr>
+        <tr><td>Date</td><td id="rDate">-</td></tr>
+        <tr><td>Total Questions</td><td id="rTotal">-</td></tr>
+        <tr><td>Correct Answers</td><td id="rCorrect">-</td></tr>
+        <tr><td>Wrong / Skipped</td><td id="rWrong">-</td></tr>
+        <tr><td>Percentage</td><td id="rPercent">-</td></tr>
+        <tr><td>Grade</td><td id="rGrade">-</td></tr>
+        <tr class="result-status-row"><td>Result</td><td id="rStatus">-</td></tr>
+      </table>
+
+      <div class="passing-note">Passing Marks: 33% | Grading: Auto-generated</div>
+    </div>
+
+    <div class="result-actions no-print">
+      <button id="downloadBtn" class="btn btn-primary">⬇ Download (PDF)</button>
+      <button id="shareBtn" class="btn btn-primary">📤 Share Result</button>
+      <button id="reviewBtn" class="btn btn-ghost">🔍 Review Answers</button>
+      <button id="homeBtn" class="btn btn-ghost">🏠 Back to Home</button>
+    </div>
+
+    <div id="reviewSection" class="review-section no-print"></div>
+  </section>
+
+  <!-- HISTORY VIEW -->
+  <section id="historyView" class="view">
+    <div class="test-topbar">
+      <span>Attempt History</span>
+      <button id="closeHistoryBtn" class="icon-btn">✖</button>
+    </div>
+    <div id="historyList" class="history-list"></div>
+  </section>
+
+</main>
+
+<footer class="app-footer no-print">GHS 124NB &middot; Offline PWA</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
